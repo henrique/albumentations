@@ -2456,12 +2456,14 @@ class MedianBlur(Blur):
         return F.median_blur(image, ksize)
 
 
-class GaussianBlur(Blur):
+class GaussianBlur(ImageOnlyTransform):
     """Blur the input image using using a Gaussian filter with a random kernel size.
 
     Args:
         blur_limit (int): maximum Gaussian kernel size for blurring the input image.
             Must be zero or odd and in range [3, inf). Default: (3, 7).
+        min_max_sigma (float, float) or None: sigma range for the Gaussian kernel.
+            Must be positive and non-zero. blur_limit is ignored if min_max_sigma is set.
         p (float): probability of applying the transform. Default: 0.5.
 
     Targets:
@@ -2471,11 +2473,28 @@ class GaussianBlur(Blur):
         uint8, float32
     """
 
-    def __init__(self, blur_limit=7, always_apply=False, p=0.5):
-        super(GaussianBlur, self).__init__(blur_limit, always_apply, p)
+    def __init__(self, blur_limit=7, min_max_sigma=None, always_apply=False, p=0.5):
+        super(GaussianBlur, self).__init__(always_apply, p)
+        assert blur_limit == 0 or blur_limit % 2 == 1, print(
+            'blur_limit must be zero or odd and in range [3, inf). Default: (3, 7)')
+        assert min_max_sigma is None or (min(min_max_sigma) > 0 and len(min_max_sigma) == 2), print(
+            'min_max_sigma values must be positive and non-zero')
+        self.blur_limit = to_tuple(blur_limit, 3)
+        self.min_max_sigma = min_max_sigma
 
-    def apply(self, image, ksize=3, **params):
-        return F.gaussian_blur(image, ksize)
+    def apply(self, image, ksize=3, sigma=0, **params):
+        return gaussian_blur(image, ksize)
+
+    def get_params(self):
+        if self.min_max_sigma is None:
+            return {"ksize": int(random.choice(np.arange(self.blur_limit[0], self.blur_limit[1] + 1, 2)))}
+        else:
+            sigma = random.uniform(self.min_max_sigma[0], self.min_max_sigma[1])
+            return {"sigma": sigma,
+                    "ksize": max(3, math.ceil((sigma - 0.5)/0.3)*2 + 1)}
+
+    def get_transform_init_args_names(self):
+        return ("blur_limit", "min_max_sigma")
 
 
 class GaussNoise(ImageOnlyTransform):
