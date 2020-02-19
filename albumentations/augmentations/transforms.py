@@ -2479,7 +2479,7 @@ class GaussianBlur(ImageOnlyTransform):
         self.min_max_sigma = min_max_sigma
 
     def apply(self, image, ksize=3, sigma=0, **params):
-        return F.gaussian_blur(image, ksize)
+        return F.gaussian_blur(image, ksize, sigma)
 
     def get_params(self):
         if self.min_max_sigma is None:
