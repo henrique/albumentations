@@ -123,6 +123,32 @@ def test_elastic_transform_interpolation(monkeypatch, interpolation):
     assert np.array_equal(data["mask"], expected_mask)
 
 
+@pytest.mark.parametrize("size", [7, 13, 50, 224])
+@pytest.mark.parametrize("dtype", [np.uint8, np.float32, np.float64])
+def test_gaussian_blur(size, dtype):
+    if dtype is np.uint8:
+        image = np.random.randint(low=0, high=256, size=(size, size, 3), dtype=np.uint8)
+    else:
+        image = np.random.rand(size, size, 3).astype(dtype)
+    aug = A.GaussianBlur(min_max_sigma=(1.4, 1.4), p=1)
+    data = aug(image=image)
+    expected_image = F.gaussian_blur(image, ksize=7)
+    assert np.mean(abs(data["image"].astype(float) - expected_image)) < 1e-2 * np.max(image)
+
+
+@pytest.mark.parametrize("size", [7, 13, 50, 224])
+@pytest.mark.parametrize("sigma", [1e-6, 0.1, 0.12])
+@pytest.mark.parametrize("dtype", [np.uint8, np.float32, np.float64])
+def test_gaussian_blur_no_change(size, sigma, dtype):
+    if dtype is np.uint8:
+        image = np.random.randint(low=0, high=256, size=(size, size, 3), dtype=np.uint8)
+    else:
+        image = np.random.rand(size, size, 3).astype(dtype)
+    aug = A.GaussianBlur(min_max_sigma=(sigma, sigma), p=1)
+    data = aug(image=image)
+    assert np.mean(abs(data["image"].astype(float) - image)) < 1e-9 * np.max(image)
+
+
 @pytest.mark.parametrize(
     ["augmentation_cls", "params"],
     [

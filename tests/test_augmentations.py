@@ -117,7 +117,7 @@ def test_image_only_augmentations(augmentation_cls, params, image, mask):
         [Blur, {}],
         [MotionBlur, {}],
         [MedianBlur, {"blur_limit": (3, 5)}],
-        [GaussianBlur, {}],
+        [GaussianBlur, {"min_max_sigma": (0.3, 0.9)}],
         [GaussNoise, {}],
         [ChannelShuffle, {}],
         [InvertImg, {}],
