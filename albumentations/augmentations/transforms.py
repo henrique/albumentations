@@ -2528,12 +2528,12 @@ class GaussianBlur(ImageOnlyTransform):
 
     def get_params(self):
         if self.min_max_sigma is None:
+            sigma = 0
             ksize = int(random.choice(np.arange(self.blur_limit[0], self.blur_limit[1] + 1, 2)))
-            return {"ksize": ksize}
         else:
             sigma = random.uniform(self.min_max_sigma[0], self.min_max_sigma[1])
-            # ksize is automatically chosen by cv2.GaussianBlur when sigma is set
-            return {"sigma": sigma, "ksize": 0}
+            ksize = 0
+        return {"sigma": sigma, "ksize": ksize}
 
     def get_transform_init_args_names(self):
         return ("blur_limit", "min_max_sigma")
